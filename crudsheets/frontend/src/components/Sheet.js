@@ -16,9 +16,13 @@ const initialData = [
 ];
 
 const Sheet = () => {
+    /**------------------------------------ Local States --------------------------------------------------- */
+
     const [data, setData] = useState(initialData);
     const [editingCell, setEditingCell] = useState(null);
     const [newValue, setNewValue] = useState('');
+
+    /**------------------------------------ Handlers ------------------------------------------------------- */
 
     const handleEdit = (rowIndex, colKey) => {
         setEditingCell({ rowIndex, colKey });
@@ -48,9 +52,9 @@ const Sheet = () => {
     };
 
     return (
-        <div className="container mx-auto bg-[#1E293B]">
-            <button onClick={handleAddRow} className="m-4 p-2 bg-[#18334F] hover:bg-[#FEE4A4] hover:text-[#764A2D] duration-300 text-white rounded">Add Row</button>
-            <div className="overflow-x-auto m-4 rounded-lg border-gray-400 border-1 shadow-md bg-inherit backdrop-blur-md">
+        <div className="mx-auto bg-custom-gradient font-poppin">
+            <button onClick={handleAddRow} className="m-6 p-[0.75em] text-sm bg-[#18334F] hover:bg-[#FEE4A4] hover:text-[#764A2D] duration-300 text-white rounded">Add Row</button>
+            <div className="overflow-x-auto m-8 rounded-lg border-gray-400 border-1 shadow-md bg-inherit backdrop-blur-md">
                 <table className="min-w-full bg-[#293548] shadow-md bg-inherit backdrop-blur-md">
                     <thead>
                         <tr className='text-[#35B0E9]'>
@@ -60,14 +64,14 @@ const Sheet = () => {
                             <th className="py-2 px-4 border-b">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className='text-white'>
+                    <tbody>
                         {data.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
+                            <tr key={rowIndex}> 
                                 {Object.entries(row).map(([colKey, cell], colIndex) => (
                                     colKey !== 'id' && (
                                         <td key={colIndex} className="py-2 px-4 border-b" onDoubleClick={() => handleEdit(rowIndex, colKey)}>
                                             {editingCell && editingCell.rowIndex === rowIndex && editingCell.colKey === colKey ? (
-                                                <input value={newValue} onChange={handleChange} onBlur={handleSave} />
+                                                <input className='text-black p-2 rounded-lg border-none' value={newValue} onChange={handleChange} onBlur={handleSave} />
                                             ) : (
                                                 cell
                                             )}
@@ -75,7 +79,7 @@ const Sheet = () => {
                                     )
                                 ))}
                                 <td className="py-2 px-4 border-b">
-                                    <button onClick={() => handleDeleteRow(rowIndex)} className="p-2 bg-[#18334F] hover:bg-[#CA2676] duration-300 text-white rounded">Delete Row</button>
+                                    <button onClick={() => handleDeleteRow(rowIndex)} className="p-2 bg-[#18334F] hover:bg-[#CA2676] hover:text-[#35B0E9] duration-300 text-white rounded">Delete Row</button>
                                 </td>
                             </tr>
                         ))}
