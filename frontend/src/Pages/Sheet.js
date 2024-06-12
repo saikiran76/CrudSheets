@@ -18,6 +18,16 @@ const Sheet = () => {
         fetchData();
     }, [selectedDate]);
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (editingCell) {
+                handleSave();
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [editingCell]);
+    
+
     const fetchDates = async () => {
         try {
             const result = await axios.get('http://localhost:5000/api/spreadsheet/dates');
@@ -112,9 +122,25 @@ const Sheet = () => {
         }
     };
 
+    // const handleDateChange = (e) => {
+    //     setSelectedDate(e.target.value);
+    // };
     const handleDateChange = (e) => {
-        setSelectedDate(e.target.value);
+        const date = e.target.value;
+        setSelectedDate(date);
+        fetchData(date);
     };
+
+    const handleBlur = async () => {
+        if (editingCell) {
+            await handleSave();
+        }
+    };
+    
+    useEffect(() => {
+        window.addEventListener('blur', handleBlur);
+        return () => window.removeEventListener('blur', handleBlur);
+    }, [editingCell]);
 
     return (
         <div className="mx-auto bg-custom-gradient font-poppin">
@@ -122,9 +148,9 @@ const Sheet = () => {
             <input type="file" onChange={handleUpload} className="m-6" />
             <select value={selectedDate} onChange={handleDateChange} className="m-6">
                 <option value="">Select Date</option>
-                {dates.map((date, index) => (
-                    <option key={index} value={date}>{date}</option>
-                ))}
+                {/* Example hardcoded options */}
+                <option value="2024-06-01">2024-06-01</option>
+                <option value="2024-06-02">2024-06-02</option>
             </select>
             <div className="overflow-x-auto m-8 rounded-lg border-gray-400 border-1 shadow-md bg-inherit backdrop-blur-md">
                 <table className="min-w-full bg-[#293548] shadow-md bg-inherit backdrop-blur-md">
