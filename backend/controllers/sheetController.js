@@ -1,9 +1,24 @@
 const { Spreadsheet } = require('../models');
 const xlsx = require('xlsx');
+const { Op } = require('sequelize');
 
 exports.getSpreadsheets = async (req, res) => {
     try {
-        const spreadsheets = await Spreadsheet.findAll();
+        const { date } = req.query;
+        let spreadsheets;
+        // const spreadsheets = await Spreadsheet.findAll();
+        if(date){
+            const selectedDate = new Date(date);
+            spreadsheets = await Spreadsheet.findAll({
+                where: {
+                    createdAt: {
+                        [Op.eq]: selectedDate
+                    }
+                }
+            });
+        } else {
+            spreadsheets = await Spreadsheet.findAll();
+        }
         res.status(200).json(spreadsheets);
     } catch (error) {
         console.error(error);
