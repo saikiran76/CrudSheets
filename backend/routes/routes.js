@@ -6,6 +6,9 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+router.get('/', (req, res)=>{
+    res.send('Hello Backend!')
+})
 router.get('/spreadsheet', sheetController.getSpreadsheets);
 router.post('/spreadsheet', sheetController.createSpreadsheet);
 router.put('/spreadsheet/:id', sheetController.updateSpreadsheet);
