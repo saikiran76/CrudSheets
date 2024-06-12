@@ -1,38 +1,19 @@
-const express = require("express");
-// const mysql = require("mysql")
-const cors = require("cors")
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
+const routes = require('./routes/routes');
+const { sequelize } = require('./models');
 
-const app = express()
-app.use(cors())
+const app = express();
+const port = process.env.PORT || 5000;
 
-const db = require('./models')
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const { Spreadsheet } = require("./models")
+app.use('/api', routes);
 
-app.get("/", (req, res)=>{
-    Spreadsheet.create({
-        column1: "data of c1",
-        column2: "data of c2",
-        column3: "data of c3"
-
-    }).catch(err=>{
-        if(err){
-            res.json("Error creating sheet: ", err)
-        }
-    })
-
-    return res.json({
-        message: "Hello World!"
-    })
-} )
-
-db.sequelize.sync().then((req)=>{
-    app.listen(5000, ()=>{
-        console.log("Backend server is running on port 5000")
-    })
-
-})
-
-// app.listen(5000, ()=>{
-//     console.log("Backend server is running on port 5000")
-// })
+sequelize.sync().then(() => {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+});

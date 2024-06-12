@@ -1,25 +1,26 @@
-'use strict';
+const { Model, DataTypes } = require('sequelize');
 
-const { Model } = require('sequelize');
+class Spreadsheet extends Model {}
 
-
-module.exports = (sequelize, DataTypes) => {
-    class Spreadsheet extends Model {
-        // static associate(models) {
-        //     // Spreadsheet.belongsTo(models.User, {
-        //     //     foreignKey: 'userId',
-        //     //     as: 'user'
-        //     // });
-        // }
-    }
-
+module.exports = (sequelize) => {
     Spreadsheet.init({
-        column1: DataTypes.STRING,
-        column2: DataTypes.STRING,
-        column3: DataTypes.STRING,
+        data: {
+            type: DataTypes.JSON,
+            allowNull: false,
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            defaultValue: DataTypes.NOW,
+        }
     }, {
         sequelize,
         modelName: 'Spreadsheet',
+        tableName: 'Spreadsheets',
     });
+
     return Spreadsheet;
 };
