@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Button } from '../components/Button';
 
 const Sheet = () => {
     const [data, setData] = useState([]);
@@ -117,7 +118,7 @@ const Sheet = () => {
 
     return (
         <div className="mx-auto bg-custom-gradient font-poppin">
-            <button onClick={handleAddRow} className="m-6 p-[0.75em] text-sm bg-[#18334F] hover:bg-[#FEE4A4] hover:text-[#764A2D] duration-300 text-white rounded">Add Row</button>
+            <Button name="Add Row" handler={handleAddRow}/>
             <input type="file" onChange={handleUpload} className="m-6" />
             <select value={selectedDate} onChange={handleDateChange} className="m-6">
                 <option value="">Select Date</option>
