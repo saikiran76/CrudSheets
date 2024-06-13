@@ -30,7 +30,7 @@ const Sheet = () => {
 
     const fetchDates = async () => {
         try {
-            const result = await axios.get('http://localhost:5000/api/spreadsheet/dates');
+            const result = await axios.get('https://crudsheets-production.up.railway.app/api/spreadsheet/dates');
             setDates(result.data);
         } catch (error) {
             console.error('Error fetching dates:', error);
@@ -40,7 +40,7 @@ const Sheet = () => {
 
     const fetchData = async () => {
         try {
-            const result = await axios.get('http://localhost:5000/api/spreadsheet');
+            const result = await axios.get('https://crudsheets-production.up.railway.app/api/spreadsheet');
             const data = result.data.map(row => row.data);
             console.log('Fetched data:', data); 
             setData(data);
@@ -67,7 +67,7 @@ const Sheet = () => {
         setEditingCell(null);
 
         try {
-            await axios.put(`http://localhost:5000/api/spreadsheet/${data[rowIndex].id}`, { [colKey]: newValue });
+            await axios.put(`https://crudsheets-production.up.railway.app/api/spreadsheet/${data[rowIndex].id}`, { [colKey]: newValue });
         } catch (error) {
             console.error('Error saving data:', error);
         }
@@ -80,7 +80,7 @@ const Sheet = () => {
         }, {});
 
         try {
-            const result = await axios.post('http://localhost:5000/api/spreadsheet', { data: newRow });
+            const result = await axios.post('https://crudsheets-production.up.railway.app/api/spreadsheet', { data: newRow });
             setData([...data, result.data]);
         } catch (error) {
             console.error('error ading row:', error);
@@ -99,7 +99,7 @@ const Sheet = () => {
     const handleDeleteRow = async (rowIndex) => {
         const id = data[rowIndex].id;
         try {
-            await axios.delete(`http://localhost:5000/api/spreadsheet/${id}`);
+            await axios.delete(`https://crudsheets-production.up.railway.app/api/spreadsheet/${id}`);
             const updatedData = data.filter((_, index) => index !== rowIndex);
             setData(updatedData);
         } catch (error) {
@@ -113,7 +113,7 @@ const Sheet = () => {
         formData.append('file', file);
     
         try {
-            await axios.post('http://localhost:5000/api/spreadsheet/upload', formData, {
+            await axios.post('https://crudsheets-production.up.railway.app/api/spreadsheet/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
