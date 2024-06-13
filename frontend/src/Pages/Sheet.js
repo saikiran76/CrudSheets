@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button } from '../components/Button';
 import useUndo from 'use-undo';
+import LoaderComp from '../components/Loader';
 
 const Sheet = () => {
     const [data, { set: setDataState, undo, redo, canUndo, canRedo }] = useUndo([]);
@@ -11,16 +12,20 @@ const Sheet = () => {
     const [newValue, setNewValue] = useState('');
     const [selectedDate, setSelectedDate] = useState('');
     const [dates, setDates] = useState([]);
+    const [Loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchDates();
+        setLoading(false)
     }, []);
 
     useEffect(() => {
         if (selectedDate) {
             fetchData(selectedDate);
+            setLoading(false);
         } else {
             fetchData();
+            setLoading(false);
         }
     }, [selectedDate]);
 
@@ -123,11 +128,12 @@ const Sheet = () => {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            setDataState(result.data.map(row => ({
+            const fetchedData = result.data.map(row => ({
                 id: row.id,
                 ...row.data
-            })));
-            setColumns(Object.keys(result.data[0].data || {}));
+            }));
+            setDataState(fetchedData);
+            setColumns(Object.keys(fetchedData[0] || {}));
         } catch (error) {
             console.error('Error uploading file:', error);
         }
@@ -162,7 +168,7 @@ const Sheet = () => {
                 <table className="min-w-full bg-[#293548] shadow-md bg-inherit backdrop-blur-md">
                     <thead>
                         <tr className='text-[#35B0E9]'>
-                            {columns.map((col, index) => (
+                            {Loading ? <LoaderComp/> : columns.map((col, index) => (
                                 <th key={index} className="py-2 px-4 border-b">{col}</th>
                             ))}
                             <th className="py-2 px-4 border-b">Actions</th>
@@ -170,7 +176,7 @@ const Sheet = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {presentData.map((row, rowIndex) => (
+                    {Loading ? <LoaderComp/> : presentData.map((row, rowIndex) => (
                             <tr key={rowIndex}>
                                 {columns.map((colKey, colIndex) => (
                                     <td key={colIndex} className="py-2 px-4 border-b" onDoubleClick={() => handleEdit(rowIndex, colKey)}>
@@ -190,7 +196,7 @@ const Sheet = () => {
                             </tr>
                         ))}
                         <tr>
-                            {columns.map((col, index) => (
+                        {Loading ? <LoaderComp/> : columns.map((col, index) => (
                                 <td key={index} className="py-2 px-4 border-b"></td>
                             ))}
                             <td className="py-2 px-4 border-b"></td>
