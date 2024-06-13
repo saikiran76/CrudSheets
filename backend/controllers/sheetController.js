@@ -1,13 +1,27 @@
 const { Spreadsheet } = require('../models');
 const xlsx = require('xlsx');
-const { Op } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
+
+exports.getDates = async (req, res) => {
+    try {
+        const dates = await Spreadsheet.findAll({
+            attributes: [
+                [Sequelize.fn('DISTINCT', Sequelize.fn('DATE', Sequelize.col('createdAt'))), 'date']
+            ],
+            order: [[Sequelize.fn('DATE', Sequelize.col('createdAt')), 'DESC']]
+        });
+        res.status(200).json(dates.map(date => date.get('date')));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch dates' });
+    }
+};
 
 exports.getSpreadsheets = async (req, res) => {
     try {
         const { date } = req.query;
         let spreadsheets;
-        // const spreadsheets = await Spreadsheet.findAll();
-        if(date){
+        if (date) {
             const selectedDate = new Date(date);
             spreadsheets = await Spreadsheet.findAll({
                 where: {
@@ -23,21 +37,6 @@ exports.getSpreadsheets = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch spreadsheets' });
-    }
-};
-
-exports.getDates = async (req, res) => {
-    try {
-        const dates = await Spreadsheet.findAll({
-            attributes: [
-                [Sequelize.fn('DATE', Sequelize.col('createdAt')), 'date']
-            ],
-            group: ['date']
-        });
-        res.status(200).json(dates.map(date => date.date));
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to fetch dates' });
     }
 };
 
@@ -88,6 +87,7 @@ exports.uploadSpreadsheet = async (req, res) => {
 
         const formattedData = jsonData.map(row => ({ data: row }));
 
+        await Spreadsheet.destroy({ where: {}, truncate: true });
         const createdSheets = await Spreadsheet.bulkCreate(formattedData);
 
         res.status(201).json(createdSheets);

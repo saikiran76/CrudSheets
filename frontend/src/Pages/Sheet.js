@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button } from '../components/Button';
+import useUndo from 'use-undo';
 
 const Sheet = () => {
-    const [data, setData] = useState([]);
+    const [data, { set: setDataState, undo, redo, canUndo, canRedo }] = useUndo([]);
+    const presentData = data.present;
     const [columns, setColumns] = useState([]);
     const [editingCell, setEditingCell] = useState(null);
     const [newValue, setNewValue] = useState('');
@@ -15,18 +17,12 @@ const Sheet = () => {
     }, []);
 
     useEffect(() => {
-        fetchData();
+        if (selectedDate) {
+            fetchData(selectedDate);
+        } else {
+            fetchData();
+        }
     }, [selectedDate]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (editingCell) {
-                handleSave();
-            }
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [editingCell]);
-    
 
     const fetchDates = async () => {
         try {
@@ -37,22 +33,25 @@ const Sheet = () => {
         }
     };
 
-
-    const fetchData = async () => {
+    const fetchData = async (date) => {
         try {
-            const result = await axios.get('https://crudsheets-production.up.railway.app/api/spreadsheet');
-            const data = result.data.map(row => row.data);
-            console.log('Fetched data:', data); 
-            setData(data);
-            setColumns(Object.keys(data[0] || {}));
+            const result = await axios.get('https://crudsheets-production.up.railway.app/api/spreadsheet', {
+                params: { date }
+            });
+            const fetchedData = result.data.map(row => ({
+                id: row.id,
+                ...row.data
+            }));
+            setDataState(fetchedData);
+            setColumns(Object.keys(fetchedData[0] || {}));
         } catch (error) {
-            console.error('Error feching data:', error);
+            console.error('Error fetching data:', error);
         }
     };
 
     const handleEdit = (rowIndex, colKey) => {
         setEditingCell({ rowIndex, colKey });
-        setNewValue(data[rowIndex][colKey]);
+        setNewValue(presentData[rowIndex][colKey]);
     };
 
     const handleChange = (e) => {
@@ -61,13 +60,13 @@ const Sheet = () => {
 
     const handleSave = async () => {
         const { rowIndex, colKey } = editingCell;
-        const updatedData = [...data];
+        const updatedData = [...presentData];
         updatedData[rowIndex][colKey] = newValue;
-        setData(updatedData);
+        setDataState(updatedData);
         setEditingCell(null);
 
         try {
-            await axios.put(`https://crudsheets-production.up.railway.app/api/spreadsheet/${data[rowIndex].id}`, { [colKey]: newValue });
+            await axios.put(`https://crudsheets-production.up.railway.app/api/spreadsheet/${presentData[rowIndex].id}`, { [colKey]: newValue });
         } catch (error) {
             console.error('Error saving data:', error);
         }
@@ -81,27 +80,33 @@ const Sheet = () => {
 
         try {
             const result = await axios.post('https://crudsheets-production.up.railway.app/api/spreadsheet', { data: newRow });
-            setData([...data, result.data]);
+            setDataState([...presentData, result.data]);
         } catch (error) {
-            console.error('error ading row:', error);
-            const newRowWithId = { id: data.length + 1, ...newRow };
-            setData([...data, newRowWithId]);
+            console.error('Error adding row:', error);
+            const newRowWithId = { id: presentData.length + 1, ...newRow };
+            setDataState([...presentData, newRowWithId]);
         }
     };
 
     const handleAddColumn = () => {
         const newColumn = `column${columns.length + 1}`;
         setColumns([...columns, newColumn]);
-        const updatedData = data.map(row => ({ ...row, [newColumn]: '' }));
-        setData(updatedData);
+        const updatedData = presentData.map(row => ({ ...row, [newColumn]: '' }));
+        setDataState(updatedData);
     };
 
     const handleDeleteRow = async (rowIndex) => {
-        const id = data[rowIndex].id;
+        const id = presentData[rowIndex].id;
+
+        if (!id) {
+            console.error('Error: No ID found for the row.');
+            return;
+        }
+
         try {
             await axios.delete(`https://crudsheets-production.up.railway.app/api/spreadsheet/${id}`);
-            const updatedData = data.filter((_, index) => index !== rowIndex);
-            setData(updatedData);
+            const updatedData = presentData.filter((_, index) => index !== rowIndex);
+            setDataState(updatedData);
         } catch (error) {
             console.error('Error deleting row:', error);
         }
@@ -111,26 +116,25 @@ const Sheet = () => {
         const file = event.target.files[0];
         const formData = new FormData();
         formData.append('file', file);
-    
+
         try {
-            await axios.post('https://crudsheets-production.up.railway.app/api/spreadsheet/upload', formData, {
+            const result = await axios.post('https://crudsheets-production.up.railway.app/api/spreadsheet/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            fetchData();
+            setDataState(result.data.map(row => ({
+                id: row.id,
+                ...row.data
+            })));
+            setColumns(Object.keys(result.data[0].data || {}));
         } catch (error) {
             console.error('Error uploading file:', error);
         }
     };
 
-    // const handleDateChange = (e) => {
-    //     setSelectedDate(e.target.value);
-    // };
     const handleDateChange = (e) => {
-        const date = e.target.value;
-        setSelectedDate(date);
-        fetchData(date);
+        setSelectedDate(e.target.value);
     };
 
     const handleBlur = async () => {
@@ -138,7 +142,7 @@ const Sheet = () => {
             await handleSave();
         }
     };
-    
+
     useEffect(() => {
         window.addEventListener('blur', handleBlur);
         return () => window.removeEventListener('blur', handleBlur);
@@ -146,13 +150,13 @@ const Sheet = () => {
 
     return (
         <div className="mx-auto bg-custom-gradient font-poppin">
-            <Button name="Add Row" handler={handleAddRow}/>
+            <Button name="Add Row" handler={handleAddRow} />
             <input type="file" onChange={handleUpload} className="m-6" />
             <select value={selectedDate} onChange={handleDateChange} className="m-6">
                 <option value="">Select Date</option>
-                {/* Example hardcoded options */}
-                <option value="2024-06-01">2024-06-01</option>
-                <option value="2024-06-02">2024-06-02</option>
+                {dates.map((date, index) => (
+                    <option key={index} value={date}>{date}</option>
+                ))}
             </select>
             <div className="overflow-x-auto m-8 rounded-lg border-gray-400 border-1 shadow-md bg-inherit backdrop-blur-md">
                 <table className="min-w-full bg-[#293548] shadow-md bg-inherit backdrop-blur-md">
@@ -166,7 +170,7 @@ const Sheet = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((row, rowIndex) => (
+                        {presentData.map((row, rowIndex) => (
                             <tr key={rowIndex}>
                                 {columns.map((colKey, colIndex) => (
                                     <td key={colIndex} className="py-2 px-4 border-b" onDoubleClick={() => handleEdit(rowIndex, colKey)}>
@@ -202,4 +206,3 @@ const Sheet = () => {
 }
 
 export default Sheet;
-
