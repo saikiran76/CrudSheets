@@ -84,6 +84,8 @@ const Sheet = () => {
             setData([...data, result.data]);
         } catch (error) {
             console.error('error ading row:', error);
+            const newRowWithId = { id: data.length + 1, ...newRow };
+            setData([...data, newRowWithId]);
         }
     };
 
