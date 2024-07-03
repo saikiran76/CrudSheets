@@ -29,9 +29,6 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 - also cd into frontend (a parallel bash or terminal would be better)
 - run `npm start`
 
-## Resources & References used for assistance (errors and struck moments, and some functionality purpose)
-- `https://github.com/sequelize/cli/issues/187`
-- `https://stackoverflow.com/questions/50614067/error-please-install-mysql2-package-manually`
-- `https://github.com/Developer-Nijat/nodejs-mongo-express-crud`
-- chatgpt chat: `https://chatgpt.com/share/0bef7749-809e-4053-a030-6b83205702d0`
+
+
 
